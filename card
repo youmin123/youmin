@@ -1,0 +1,95 @@
+// 카드 분배 함수
+function dealCards() {
+    const excluded = [10, 30, 50, 80];
+    let deck = [];
+
+    for (let i = 1; i <= 100; i++) {
+        if (!excluded.includes(i)) deck.push(i);
+    }
+
+    deck = deck.sort(() => Math.random() - 0.5); // 무작위 섞기
+
+    const A = deck.slice(0, 10);
+    const B = deck.slice(10, 20);
+    const C = deck.slice(20, 30);
+
+    return { A, B, C };
+}
+
+// 게임 플레이 함수
+function play(param0) {
+    if (!Array.isArray(param0) || param0.length % 3 !== 0) {
+        return { A: 0, B: 0, C: 0 };
+    }
+
+    const scores = { A: 0, B: 0, C: 0 };
+    let arrays = [[10], [30], [50], [80]];
+
+    const getClosestArrayIndex = (card) => {
+        let closestIdx = -1;
+        let minDiff = Infinity;
+
+        for (let i = 0; i < arrays.length; i++) {
+            if (arrays[i].length === 0) continue;
+            const last = arrays[i][arrays[i].length - 1];
+            const diff = Math.abs(last - card);
+
+            if (
+                diff < minDiff ||
+                (diff === minDiff && last > arrays[closestIdx]?.[arrays[closestIdx].length - 1])
+            ) {
+                minDiff = diff;
+                closestIdx = i;
+            }
+        }
+
+        return closestIdx;
+    };
+
+    for (let i = 0; i < param0.length; i += 3) {
+        if (arrays.every(arr => arr.length === 0)) break;
+
+        const turn = [
+            { name: 'A', card: param0[i] },
+            { name: 'B', card: param0[i + 1] },
+            { name: 'C', card: param0[i + 2] },
+        ];
+
+        turn.sort((a, b) => a.card - b.card);
+
+        for (const { name, card } of turn) {
+            if (arrays.every(arr => arr.length === 0)) break;
+
+            const idx = getClosestArrayIndex(card);
+            if (idx === -1) continue;
+
+            const last = arrays[idx][arrays[idx].length - 1];
+
+            if (card < last) {
+                arrays[idx].push(card);
+            } else {
+                scores[name] += arrays[idx].length;
+                arrays[idx] = [];
+            }
+        }
+    }
+
+    return scores;
+}
+
+// ▶ 실행
+const hands = dealCards();
+const merged = [];
+
+for (let i = 0; i < 10; i++) {
+    merged.push(hands.A[i]);
+    merged.push(hands.B[i]);
+    merged.push(hands.C[i]);
+}
+
+console.log("A:", hands.A);
+console.log("B:", hands.B);
+console.log("C:", hands.C);
+
+const result = play(merged);
+console.log("결과:", result);
